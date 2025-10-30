@@ -46,15 +46,15 @@ jobs:
           username: ${{ github.actor }} # Używa nazwy użytkownika, który uruchomił workflow
           password: ${{ secrets.GITHUB_TOKEN }} # Automatycznie generowany token
 
+      - name: Przygotuj nazwę obrazu (małe litery)
+        run: |
+          IMAGE_NAME=$(echo ghcr.io/${{ github.repository }} | tr '[:upper:]' '[:lower:]')
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+        
       - name: Budowanie i pchanie obrazu Docker
         uses: docker/build-push-action@v4
         with:
           context: .
-          push: true # Pchaj obraz do rejestru
-          # Generuje tag obrazu, np. ghcr.io/nazwa-uzytkownika/nazwa-repo:latest
-          tags: ghcr.io/${{ github.repository }}:${{ github.sha }} 
-          # Używamy GITHUB_SHA (hash commita) dla unikalności wersji
-          # Można też dodać tag 'latest':
-          # tags: |
-          #   ghcr.io/${{ github.repository }}:latest
-          #   tags: ghcr.io/${{ toLower(github.repository) }}:${{ github.sha }}
+          push: true
+          # Użyj zmiennej środowiskowej przygotowanej w poprzednim kroku
+          tags: ${{ env.IMAGE_NAME }}:${{ github.sha }}
