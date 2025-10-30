@@ -1,0 +1,60 @@
+name: CI/CD Pipeline
+
+# d) Uruchamiaj pipeline po każdym pushu do gałęzi 'main'
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  # b) Etap 1: Build & Test
+  build_and_test:
+    runs-on: ubuntu-latest # Użyj maszyny wirtualnej z Ubuntu
+    
+    steps:
+      - name: Pobranie kodu (Checkout)
+        uses: actions/checkout@v3
+
+      - name: Konfiguracja Pythona
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Instalacja zależności
+        run: pip install -r requirements.txt
+
+      # Tu dodalibyśmy testy jednostkowe, np. `pytest`
+      # Na razie symulujemy test, sprawdzając, czy aplikacja się uruchamia
+      - name: Prosty test (uruchomienie aplikacji)
+        run: python app.py & # Uruchom w tle
+        
+  # b) Etap 2: Deploy (Build & Push Docker Image)
+  build_and_push:
+    needs: build_and_test # Uruchom ten job tylko, jeśli 'build_and_test' się powiódł
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write # Wymagane do pchania obrazów do GHCR
+
+    steps:
+      - name: Pobranie kodu (Checkout)
+        uses: actions/checkout@v3
+
+      - name: Logowanie do GitHub Container Registry (GHCR)
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }} # Używa nazwy użytkownika, który uruchomił workflow
+          password: ${{ secrets.GITHUB_TOKEN }} # Automatycznie generowany token
+
+      - name: Budowanie i pchanie obrazu Docker
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true # Pchaj obraz do rejestru
+          # Generuje tag obrazu, np. ghcr.io/nazwa-uzytkownika/nazwa-repo:latest
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }} 
+          # Używamy GITHUB_SHA (hash commita) dla unikalności wersji
+          # Można też dodać tag 'latest':
+          # tags: |
+          #   ghcr.io/${{ github.repository }}:latest
+          #   ghcr.io/${{ github.repository }}:${{ github.sha }}

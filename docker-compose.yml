@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  # 1. Nasza aplikacja webowa
+  web:
+    build: .  # Zbuduj obraz z Dockerfile w bieżącym katalogu
+    ports:
+      - "5000:5000" # Mapuj port 5000 hosta na port 5000 kontenera
+    environment:
+      - REDIS_HOST=redis # Ustaw zmienną środowiskową. Nazwa 'redis' odpowiada nazwie usługi poniżej
+    depends_on:
+      - redis # Uruchom tę usługę dopiero, gdy usługa 'redis' będzie gotowa
+
+  # 2. Baza danych Redis
+  redis:
+    image: "redis:alpine" # Użyj gotowego obrazu Redis z Docker Hub
