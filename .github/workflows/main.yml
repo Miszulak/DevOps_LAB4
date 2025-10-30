@@ -57,4 +57,4 @@ jobs:
           # Można też dodać tag 'latest':
           # tags: |
           #   ghcr.io/${{ github.repository }}:latest
-          #   ghcr.io/${{ github.repository }}:${{ github.sha }}
+          #   tags: ghcr.io/${{ toLower(github.repository) }}:${{ github.sha }}
